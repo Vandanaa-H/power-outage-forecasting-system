@@ -1,0 +1,150 @@
+# 24-Hour Power Outage Forecasting System  
+
+## 1. Project Overview  
+This project is an **AI-powered early warning system** that predicts **power outages 24 hours in advance** using **weather data** and **power grid data**. The aim is to transform outage handling from reactive to **proactive**, enabling utilities and citizens to prepare before outages occur.  
+
+Unlike basic prediction systems, this solution is a **decision-intelligence tool** that:  
+- Predicts outages with **risk scores + confidence levels**.  
+- Explains **why** the risk exists (e.g., "High winds + IMD alert = 72% risk in Bengaluru").  
+- Pinpoints **risk locations on an interactive map** (GIS visualization).  
+- Provides **plain-language advisories** for utilities and the public.  
+- Offers an **interactive what-if simulator** to test hypothetical scenarios.  
+
+---
+
+## 2. Problem Statement  
+Power outages during severe weather (monsoon storms, lightning) are common. Current systems only respond **after** outages happen, causing economic loss, operational chaos, and public safety issues.  
+There is **no reliable, scalable early-warning system** that combines weather forecasts, grid data, and explainable AI to **predict, localize, and advise**.  
+
+---
+
+## 3. Solution Approach  
+1. **Data-Driven Forecasting** – Use historical outage data + real-time weather forecasts + IMD alerts.  
+2. **ML Model** – Hybrid architecture:  
+   - LSTM for time-series weather sequences.  
+   - XGBoost/LightGBM for tabular features.  
+   - Ensemble for final outage risk score.  
+3. **Explainability** – Feature attribution (SHAP) to provide "why" explanations.  
+4. **Geospatial Visualization** – Map-based risk heatmap and pinpointing during heavy rain/lightning warnings.  
+5. **Actionable Advisories** – AI outputs converted into natural language alerts for utilities and citizens.  
+6. **What-If Simulator** – Change rainfall, wind speed, or load → see effect on outage risk.  
+
+---
+
+## 4. Key Features  
+- ✅ **Risk Score + Confidence** instead of binary classification.  
+- ✅ **Explainability** using SHAP for feature attribution.  
+- ✅ **Location Pinpointing** on map for warnings (rain, lightning, thunderstorms).  
+- ✅ **Interactive Dashboard** for utilities and public.  
+- ✅ **Natural Language Advisories** for citizen alerts.  
+- ✅ **What-If Scenario Simulator**.  
+
+---
+
+## 5. Data Sources  
+- **Weather Data:** IMD, NOAA, OpenWeather API, Google Weather API.  
+- **Grid Data:** Historical outage logs, maintenance schedules, SCADA export (CSV/SQL).  
+- **Geospatial Data:** Shapefiles for districts (GeoJSON).  
+- **Alerts:** IMD storm warnings, lightning alerts, rainfall alerts.  
+
+---
+
+## 6. ML Model Design  
+- **Inputs:**  
+  - Rainfall (mm), wind speed, temperature, humidity, lightning strikes, storm alerts.  
+  - Grid load patterns, past outage frequency, feeder/substation data.  
+- **Architecture:**  
+  - Preprocessing: Missing value handling, normalization, feature engineering (lag features, seasonal patterns).  
+  - Model: LSTM for sequential weather → embeddings merged with grid data → fed into XGBoost ensemble.  
+- **Output:**  
+  - Outage Risk Score (0–100).  
+  - Confidence interval.  
+  - SHAP-based explanation.  
+
+---
+
+## 7. System Architecture  
+**Data Pipeline:**  
+- Collect real-time weather & grid data (APIs, batch jobs).  
+- Store in **PostgreSQL** (or **TimescaleDB** for time-series).  
+- ETL with **Prefect/Airflow** for automation.  
+
+**Model Serving:**  
+- Train ML model using TensorFlow/PyTorch + XGBoost.  
+- Deploy inference API using **FastAPI** (optimized for async).  
+- Explainability API for SHAP outputs.  
+
+**Visualization & User Interface:**  
+- **Utilities Dashboard:**  
+  - Built with **React + TailwindCSS**.  
+  - Displays heatmap (Leaflet.js / Mapbox GL) with color-coded risk zones.  
+  - Shows outage predictions, explanations, what-if simulator.  
+- **Public Advisory Page:**  
+  - Simplified alerts → "High outage risk in Bengaluru due to heavy rain".  
+
+**Deployment & Scalability:**  
+- Containerized with **Docker**.  
+- Orchestrated via **Kubernetes** for high availability.  
+- Deployed on **AWS (EC2 + S3 + RDS)** or **GCP (Compute Engine + Cloud Storage + BigQuery)**.  
+
+**Security:**  
+- HTTPS (SSL/TLS).  
+- API key protection for weather/grid APIs.  
+
+---
+
+## 8. Tech Stack  
+
+### **Backend & ML**  
+- Python (Pandas, NumPy, Scikit-learn, TensorFlow/PyTorch, XGBoost, SHAP).  
+- FastAPI for REST API serving.  
+- PostgreSQL / TimescaleDB for time-series data.  
+
+### **Data Engineering**  
+- Apache Airflow or Prefect for ETL automation.  
+- Pandas for preprocessing.  
+
+### **Frontend**  
+- React.js + Tailwind CSS for dashboard.  
+- Leaflet.js or Mapbox for maps.  
+- D3.js or Chart.js for visual analytics.  
+
+### **Cloud & Deployment**  
+- AWS/GCP/Azure for hosting.  
+- Docker + Kubernetes for scaling.  
+- CI/CD with GitHub Actions.  
+
+### **Optional Enhancements**  
+- **Streamlit prototype** for quick internal testing.  
+- **Ngrok** for local API exposure during development.  
+
+---
+
+## 9. APIs to Build  
+- **POST /predict** → Accepts weather & grid parameters → returns risk score + confidence.  
+- **GET /heatmap** → Returns GeoJSON risk map data for frontend.  
+- **GET /advisories** → Plain text advisories for public view.  
+- **POST /what-if** → Takes modified weather inputs → recalculates risk.  
+
+---
+
+## 10. Advanced Features for Competition Edge  
+- Explainability via **SHAP charts** → Transparency in predictions.  
+- Real-time heatmap updates → GIS visualization with Leaflet.  
+- Voice-enabled advisories (optional) → Accessibility feature.  
+- Integration with **SMS/Email alerts** for public.  
+- Predictive maintenance integration → Suggests preventive actions for utilities.  
+
+---
+
+## 11. Future Enhancements  
+- Expand to **multi-region/global coverage**.  
+- Add **Transformer-based models** for better time-series forecasting.  
+- Incorporate **renewable energy grid dynamics** (solar, wind).  
+- Add **blockchain for grid data integrity** (optional for future).  
+
+---
+
+## 12. Final Deliverable  
+A production-ready **AI + GIS platform** that forecasts outages, visualizes risks on an interactive map, issues advisories, and provides decision intelligence to utilities and citizens.  
+

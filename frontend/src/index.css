@@ -1,0 +1,349 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global Styles */
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 18px;
+  line-height: 1.7;
+  background-color: #fafafa;
+  color: #171717;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+}
+
+h2 {
+  font-size: 2.25rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  margin-bottom: 0.75rem;
+}
+
+h3 {
+  font-size: 1.875rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.3;
+  margin-bottom: 0.5rem;
+}
+
+h4 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+}
+
+h5, h6 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+}
+
+p {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.text-small {
+  font-size: 1rem;
+}
+
+/* Large screen enhancements */
+@media (min-width: 1024px) {
+  body {
+    font-size: 20px;
+  }
+  
+  h1 {
+    font-size: 4rem;
+  }
+  
+  h2 {
+    font-size: 2.75rem;
+  }
+  
+  h3 {
+    font-size: 2.25rem;
+  }
+  
+  h4 {
+    font-size: 1.875rem;
+  }
+  
+  h5, h6 {
+    font-size: 1.5rem;
+  }
+  
+  p {
+    font-size: 1.25rem;
+  }
+  
+  .text-small {
+    font-size: 1.125rem;
+  }
+}
+
+/* Extra large screen enhancements */
+@media (min-width: 1440px) {
+  body {
+    font-size: 22px;
+  }
+  
+  h1 {
+    font-size: 5rem;
+  }
+  
+  h2 {
+    font-size: 3.5rem;
+  }
+  
+  h3 {
+    font-size: 2.5rem;
+  }
+  
+  h4 {
+    font-size: 2rem;
+  }
+  
+  h5, h6 {
+    font-size: 1.75rem;
+  }
+  
+  p {
+    font-size: 1.375rem;
+  }
+  
+  .text-small {
+    font-size: 1.25rem;
+  }
+}
+
+/* Button and input sizing improvements */
+button, .btn {
+  font-size: 1.125rem;
+  padding: 0.875rem 1.5rem;
+  min-height: 48px;
+}
+
+input, select, textarea {
+  font-size: 1.125rem;
+  padding: 0.875rem 1rem;
+  min-height: 48px;
+}
+
+/* Card and container improvements */
+.card, .bg-white {
+  padding: 2rem;
+}
+
+@media (min-width: 1024px) {
+  button, .btn {
+    font-size: 1.25rem;
+    padding: 1rem 2rem;
+    min-height: 52px;
+  }
+  
+  input, select, textarea {
+    font-size: 1.25rem;
+    padding: 1rem 1.25rem;
+    min-height: 52px;
+  }
+  
+  .card, .bg-white {
+    padding: 2.5rem;
+  }
+}
+
+/* Component Styles */
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-neutral-200 hover:bg-neutral-300 text-neutral-900 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2;
+  }
+  
+  .btn-danger {
+    @apply bg-danger-600 hover:bg-danger-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-danger-500 focus:ring-offset-2;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-card border border-neutral-200 p-6;
+  }
+  
+  .card-hover {
+    @apply card hover:shadow-card-hover transition-shadow duration-200;
+  }
+  
+  .input-field {
+    @apply block w-full px-3 py-2 border border-neutral-300 rounded-lg shadow-sm placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+  }
+  
+  .status-indicator {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .status-high {
+    @apply status-indicator bg-danger-100 text-danger-800;
+  }
+  
+  .status-medium {
+    @apply status-indicator bg-warning-100 text-warning-800;
+  }
+  
+  .status-low {
+    @apply status-indicator bg-success-100 text-success-800;
+  }
+  
+  .status-normal {
+    @apply status-indicator bg-neutral-100 text-neutral-800;
+  }
+}
+
+/* Utility Classes */
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent;
+  }
+  
+  .bg-gradient-primary {
+    @apply bg-gradient-to-r from-primary-600 to-primary-800;
+  }
+  
+  .bg-gradient-danger {
+    @apply bg-gradient-to-r from-danger-600 to-danger-800;
+  }
+  
+  .bg-gradient-warning {
+    @apply bg-gradient-to-r from-warning-600 to-warning-800;
+  }
+  
+  .bg-gradient-success {
+    @apply bg-gradient-to-r from-success-600 to-success-800;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Map Styles */
+.leaflet-container {
+  @apply rounded-lg;
+}
+
+.leaflet-control-container .leaflet-routing-container-hide {
+  display: none;
+}
+
+/* Chart Styles */
+.recharts-wrapper {
+  @apply w-full;
+}
+
+/* Loading Animation */
+.loading-spinner {
+  @apply animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-neutral-100 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-neutral-400 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-neutral-500;
+}
+
+/* Risk Level Colors */
+.risk-high {
+  @apply text-danger-600 bg-danger-50 border-danger-200;
+}
+
+.risk-medium {
+  @apply text-warning-600 bg-warning-50 border-warning-200;
+}
+
+.risk-low {
+  @apply text-success-600 bg-success-50 border-success-200;
+}
+
+.risk-normal {
+  @apply text-neutral-600 bg-neutral-50 border-neutral-200;
+}
+
+/* Transitions */
+.transition-smooth {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.transition-fast {
+  @apply transition-all duration-150 ease-in-out;
+}
+
+/* Focus States */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+}
+
+/* Grid Layouts */
+.grid-auto-fit {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.grid-auto-fill {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E0 #F7FAFC;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #F7FAFC;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #CBD5E0;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #A0AEC0;
+}
