@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { apiService } from '../services/api';
 import { useQuery } from 'react-query';
+import ShapBarChart from '../components/charts/ShapBarChart';
 
 function WhatIfSimulator() {
   const [scenario, setScenario] = useState({
@@ -30,13 +31,135 @@ function WhatIfSimulator() {
   const runSimulation = async () => {
     setIsSimulating(true);
     try {
-      const response = await apiService.runWhatIfSimulation(scenario);
-      setResults(response);
+      // In a real application, we would use:
+      // const response = await apiService.runWhatIfSimulation(scenario);
+      
+      // For the demo, we'll generate mock data based on the scenario
+      const mockResponse = generateMockResults(scenario);
+      setResults(mockResponse);
     } catch (error) {
       console.error('Simulation failed:', error);
     } finally {
-      setIsSimulating(false);
+      setTimeout(() => {
+        setIsSimulating(false);
+      }, 1000); // Add a slight delay to simulate API call
     }
+  };
+
+  // Generate mock results based on the input scenario
+  const generateMockResults = (scenario) => {
+    // Calculate a base probability based on the scenario
+    let baseProbability = 0.2; // Start with a base probability
+    
+    // Weather factors
+    const temperatureImpact = (scenario.weather.temperature - 25) * 0.005;
+    const humidityImpact = (scenario.weather.humidity - 60) * 0.002;
+    const windSpeedImpact = scenario.weather.windSpeed * 0.005;
+    const precipitationImpact = scenario.weather.precipitation * 0.003;
+    const stormImpact = scenario.weather.stormProbability * 0.008;
+    
+    // Grid factors
+    const loadFactorImpact = (scenario.grid.loadFactor - 75) * 0.004;
+    const maintenanceImpact = scenario.grid.maintenanceScheduled ? 0.1 : 0;
+    const stabilityImpact = (100 - scenario.grid.gridStability) * 0.005;
+    
+    // External factors
+    const seasonImpact = {
+      'summer': 0.05,
+      'monsoon': 0.15,
+      'winter': 0.02,
+      'spring': 0.01
+    }[scenario.external.season];
+    
+    const holidayImpact = scenario.external.publicHoliday ? 0.03 : 0;
+    const eventImpact = scenario.external.majorEvent ? 0.04 : 0;
+    
+    // Sum all impacts to get the final probability
+    const outageProbability = Math.min(0.95, Math.max(0.05, baseProbability + 
+      temperatureImpact + humidityImpact + windSpeedImpact + precipitationImpact + stormImpact +
+      loadFactorImpact + maintenanceImpact + stabilityImpact + 
+      seasonImpact + holidayImpact + eventImpact));
+    
+    // Determine risk level based on the probability
+    let riskLevel;
+    if (outageProbability < 0.3) riskLevel = 'Low';
+    else if (outageProbability < 0.6) riskLevel = 'Medium';
+    else if (outageProbability < 0.8) riskLevel = 'High';
+    else riskLevel = 'Severe';
+    
+    // Generate fake SHAP values
+    const shapValues = [
+      { feature: 'temperature', value: temperatureImpact * 2, originalValue: scenario.weather.temperature + '°C' },
+      { feature: 'humidity', value: humidityImpact * 2, originalValue: scenario.weather.humidity + '%' },
+      { feature: 'wind_speed', value: windSpeedImpact * 2, originalValue: scenario.weather.windSpeed + ' km/h' },
+      { feature: 'precipitation', value: precipitationImpact * 2, originalValue: scenario.weather.precipitation + ' mm' },
+      { feature: 'storm_probability', value: stormImpact * 2, originalValue: scenario.weather.stormProbability + '%' },
+      { feature: 'load_factor', value: loadFactorImpact * 2, originalValue: scenario.grid.loadFactor + '%' },
+      { feature: 'maintenance_scheduled', value: maintenanceImpact * 2, originalValue: scenario.grid.maintenanceScheduled ? 'Yes' : 'No' },
+      { feature: 'grid_stability', value: -stabilityImpact * 2, originalValue: scenario.grid.gridStability + '%' },
+      { feature: 'season', value: seasonImpact * 2, originalValue: scenario.external.season.charAt(0).toUpperCase() + scenario.external.season.slice(1) },
+      { feature: 'public_holiday', value: holidayImpact * 2, originalValue: scenario.external.publicHoliday ? 'Yes' : 'No' },
+      { feature: 'major_event', value: eventImpact * 2, originalValue: scenario.external.majorEvent ? 'Yes' : 'No' },
+      { feature: 'time_of_day', value: -0.02, originalValue: 'Afternoon' },
+      { feature: 'historical_outages', value: 0.03, originalValue: 'Moderate' },
+      { feature: 'equipment_age', value: 0.05, originalValue: '8 years' },
+      { feature: 'grid_type', value: -0.01, originalValue: 'Urban' },
+      { feature: 'vegetation_density', value: 0.02, originalValue: 'Medium' }
+    ];
+    
+    // Sort SHAP values by absolute magnitude
+    shapValues.sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+    
+    // Generate contributing factors based on the top SHAP values
+    const contributingFactors = shapValues
+      .slice(0, 5)
+      .map(item => ({
+        factor: item.feature.replace(/_/g, ' '),
+        impact: item.value
+      }));
+    
+    // Generate recommendations based on the scenario
+    const recommendations = [];
+    
+    if (windSpeedImpact > 0.05) {
+      recommendations.push('Secure loose equipment and inspect overhead lines due to high wind conditions');
+    }
+    
+    if (precipitationImpact > 0.1) {
+      recommendations.push('Monitor drainage systems and consider proactive measures for flood protection');
+    }
+    
+    if (stormImpact > 0.2) {
+      recommendations.push('Deploy additional maintenance crews and prepare for potential lightning damage to transformers');
+    }
+    
+    if (loadFactorImpact > 0.05) {
+      recommendations.push('Implement load shedding protocols to reduce grid stress during peak hours');
+    }
+    
+    if (maintenanceImpact > 0.05) {
+      recommendations.push('Reschedule non-critical maintenance to improve system resilience');
+    }
+    
+    if (outageProbability > 0.6) {
+      recommendations.push('Activate emergency response teams and ensure backup systems are operational');
+    }
+    
+    if (recommendations.length === 0) {
+      recommendations.push('Continue routine monitoring of system parameters');
+      recommendations.push('Ensure preventive maintenance schedules are up to date');
+    }
+    
+    return {
+      outage_probability: outageProbability,
+      risk_level: riskLevel,
+      confidence_score: 85 + Math.random() * 10,
+      contributing_factors: contributingFactors,
+      shap_values: shapValues,
+      recommendations: recommendations,
+      base_value: 0.2,
+      predicted_value: outageProbability
+    };
   };
 
   const resetScenario = () => {
@@ -181,6 +304,22 @@ function WhatIfSimulator() {
                   className="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Storm Probability: {scenario.weather.stormProbability}%
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={scenario.weather.stormProbability}
+                  onChange={(e) => setScenario(prev => ({
+                    ...prev,
+                    weather: { ...prev.weather, stormProbability: parseInt(e.target.value) }
+                  }))}
+                  className="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
             </div>
           </motion.div>
 
@@ -295,7 +434,6 @@ function WhatIfSimulator() {
                   </div>
                   <p className="text-blue-700 mt-1">Outage Probability</p>
                 </div>
-                
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-4 bg-neutral-50 rounded-lg">
                     <div className="text-lg font-semibold text-neutral-900">
@@ -310,12 +448,11 @@ function WhatIfSimulator() {
                     <p className="text-sm text-neutral-600">Confidence</p>
                   </div>
                 </div>
-
                 <div className="space-y-3">
                   <h4 className="font-medium text-neutral-900">Contributing Factors</h4>
                   {results.contributing_factors?.map((factor, index) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
-                      <span className="text-sm text-neutral-700">{factor.factor}</span>
+                      <span className="text-sm text-neutral-700">{factor.feature || factor.factor}</span>
                       <span className={`text-sm font-medium ${
                         factor.impact > 0 ? 'text-red-600' : 'text-green-600'
                       }`}>
@@ -324,6 +461,14 @@ function WhatIfSimulator() {
                     </div>
                   ))}
                 </div>
+                {/* SHAP Bar Chart Visualization */}
+                {results.shap_values && results.shap_values.length > 0 && (
+                  <ShapBarChart 
+                    shapValues={results.shap_values} 
+                    predictedValue={results.predicted_value}
+                    baseValue={results.base_value}
+                  />
+                )}
               </div>
             ) : (
               <div className="text-center py-12 text-neutral-500">

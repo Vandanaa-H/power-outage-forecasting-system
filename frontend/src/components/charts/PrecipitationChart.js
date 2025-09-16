@@ -1,0 +1,174 @@
+import React from 'react';
+import { Bar } from 'react-chartjs-2';
+import { 
+  Chart as ChartJS, 
+  CategoryScale, 
+  LinearScale, 
+  BarElement, 
+  Title, 
+  Tooltip, 
+  Legend 
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale, 
+  LinearScale, 
+  BarElement, 
+  Title, 
+  Tooltip, 
+  Legend
+);
+
+const PrecipitationChart = ({ weatherData }) => {
+  // If no data is provided, use mock data
+  const mockData = {
+    labels: ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
+    precipitation: [0.5, 2.5, 5.0, 7.2, 3.8, 1.0, 0.2, 0],
+    maxPrecipitation: 7.2
+  };
+
+  const data = weatherData || mockData;
+  
+  const getBarColor = (value) => {
+    if (value < 2) return 'rgba(59, 130, 246, 0.7)'; // Light rain - blue
+    if (value < 5) return 'rgba(99, 102, 241, 0.7)'; // Moderate rain - indigo
+    return 'rgba(67, 56, 202, 0.7)'; // Heavy rain - darker indigo
+  };
+
+  const chartData = {
+    labels: data.labels,
+    datasets: [
+      {
+        label: 'Precipitation (mm)',
+        data: data.precipitation,
+        backgroundColor: data.precipitation.map(getBarColor),
+        borderColor: data.precipitation.map(value => {
+          const color = getBarColor(value);
+          return color.replace('0.7', '1');
+        }),
+        borderWidth: 1,
+        borderRadius: 4,
+        barThickness: 20,
+      }
+    ]
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        align: 'end',
+        labels: {
+          boxWidth: 15,
+          usePointStyle: true,
+          pointStyle: 'rect',
+          font: {
+            size: 12
+          }
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        titleColor: '#1f2937',
+        bodyColor: '#4b5563',
+        titleFont: {
+          size: 14,
+          weight: 'bold'
+        },
+        bodyFont: {
+          size: 13
+        },
+        padding: 12,
+        boxWidth: 10,
+        boxHeight: 10,
+        usePointStyle: true,
+        borderColor: 'rgba(0, 0, 0, 0.1)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+        callbacks: {
+          label: function(context) {
+            const value = context.parsed.y;
+            let intensity = 'No rain';
+            
+            if (value > 0 && value < 2) intensity = 'Light rain';
+            else if (value >= 2 && value < 5) intensity = 'Moderate rain';
+            else if (value >= 5) intensity = 'Heavy rain';
+            
+            return [`Precipitation: ${value} mm`, `Intensity: ${intensity}`];
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+          borderDash: [5, 5],
+        },
+        ticks: {
+          font: {
+            size: 11
+          },
+          color: '#6b7280'
+        }
+      },
+      y: {
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+          borderDash: [5, 5],
+        },
+        ticks: {
+          font: {
+            size: 11
+          },
+          color: '#6b7280',
+          callback: function(value) {
+            return value + ' mm';
+          }
+        },
+        min: 0,
+        max: Math.max(10, (data.maxPrecipitation || 0) * 1.2),
+        title: {
+          display: true,
+          text: 'Precipitation (mm)',
+          color: '#6b7280',
+          font: {
+            size: 12
+          }
+        }
+      }
+    }
+  };
+
+  // Calculate total precipitation
+  const totalPrecipitation = (data.precipitation || []).reduce((a, b) => a + b, 0);
+
+  return (
+    <div className="h-64 w-full">
+      <Bar data={chartData} options={options} />
+      
+      {/* Precipitation Stats */}
+      <div className="flex justify-between mt-4 text-sm">
+        <div>
+          <span className="text-neutral-500">Total:</span> 
+          <span className="ml-1 font-medium text-blue-600">{totalPrecipitation.toFixed(1)} mm</span>
+        </div>
+        <div>
+          <span className="text-neutral-500">Max Intensity:</span>
+          <span className="ml-1 font-medium text-indigo-600">{(data.maxPrecipitation || 0).toFixed(1)} mm</span>
+        </div>
+        <div>
+          <span className="text-neutral-500">Status:</span>
+          <span className={`ml-1 font-medium ${totalPrecipitation > 5 ? 'text-indigo-800' : totalPrecipitation > 1 ? 'text-indigo-600' : 'text-blue-500'}`}>
+            {totalPrecipitation > 10 ? 'Heavy Rain' : totalPrecipitation > 5 ? 'Moderate Rain' : totalPrecipitation > 1 ? 'Light Rain' : 'Minimal'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PrecipitationChart;
