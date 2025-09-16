@@ -4,13 +4,13 @@
 An AI-powered early warning system that predicts power outages 24 hours in advance using weather data and power grid data. This system transforms outage handling from reactive to proactive, enabling utilities and citizens to prepare before outages occur.
 
 ## Features
-- ✅ Risk Score + Confidence intervals instead of binary classification
-- ✅ Explainability using SHAP for feature attribution
-- ✅ Location Pinpointing on interactive maps
-- ✅ Real-time Dashboard for utilities and public
-- ✅ Natural Language Advisories for citizen alerts
-- ✅ What-If Scenario Simulator
-- ✅ RESTful API for integration
+- Risk Score + Confidence intervals instead of binary classification
+- Explainability using SHAP for feature attribution
+- Location Pinpointing on interactive maps
+- Real-time Dashboard for utilities and public
+- Natural Language Advisories for citizen alerts
+- What-If Scenario Simulator
+- RESTful API for integration
 
 ## Project Structure
 ```
