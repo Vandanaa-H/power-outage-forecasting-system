@@ -142,7 +142,8 @@ async def init_database():
         
     except Exception as e:
         logger.error(f"Database initialization error: {str(e)}")
-        raise
+        logger.warning("Continuing without database - using in-memory storage for demo")
+        # Don't raise the error for development/demo purposes
 
 
 async def get_db_session():

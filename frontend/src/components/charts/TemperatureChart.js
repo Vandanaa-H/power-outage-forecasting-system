@@ -24,15 +24,36 @@ ChartJS.register(
 );
 
 const TemperatureChart = ({ weatherData }) => {
-  // If no data is provided, use mock data
-  const mockData = {
-    labels: ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
-    temperatures: [24, 23, 22, 25, 28, 30, 29, 26],
-    minTemp: 22,
-    maxTemp: 30
-  };
+  // Transform forecast data to chart format
+  let processedData;
+  
+  if (weatherData && weatherData.items) {
+    // Real forecast data from API
+    const items = weatherData.items.slice(0, 8); // Get first 8 hours
+    processedData = {
+      labels: items.map(item => {
+        const date = new Date(item.timestamp);
+        return date.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        });
+      }),
+      temperatures: items.map(item => Math.round(item.temperature * 10) / 10),
+      minTemp: Math.min(...items.map(item => item.temperature)),
+      maxTemp: Math.max(...items.map(item => item.temperature))
+    };
+  } else {
+    // Fallback data
+    processedData = {
+      labels: ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
+      temperatures: [24, 23, 22, 25, 28, 30, 29, 26],
+      minTemp: 22,
+      maxTemp: 30
+    };
+  }
 
-  const data = weatherData || mockData;
+  const data = processedData;
 
   const chartData = {
     labels: data.labels,

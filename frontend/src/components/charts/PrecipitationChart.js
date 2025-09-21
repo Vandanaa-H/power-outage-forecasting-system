@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Bar } from 'react-chartjs-2';
 import { 
   Chart as ChartJS, 
@@ -20,19 +20,39 @@ ChartJS.register(
 );
 
 const PrecipitationChart = ({ weatherData }) => {
-  // If no data is provided, use mock data
-  const mockData = {
-    labels: ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
-    precipitation: [0.5, 2.5, 5.0, 7.2, 3.8, 1.0, 0.2, 0],
-    maxPrecipitation: 7.2
-  };
+  // Transform forecast data to chart format
+  let processedData;
+  
+  if (weatherData && weatherData.items) {
+    // Real forecast data from API
+    const items = weatherData.items.slice(0, 8);
+    processedData = {
+      labels: items.map(item => {
+        const date = new Date(item.timestamp);
+        return date.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        });
+      }),
+      precipitation: items.map(item => Math.round((item.rainfall || 0) * 10) / 10),
+      maxPrecipitation: Math.max(...items.map(item => item.rainfall || 0))
+    };
+  } else {
+    // Fallback data for demo stability
+    processedData = {
+      labels: ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
+      precipitation: [0, 0.5, 1.2, 0, 0, 2.1, 0.8, 0],
+      maxPrecipitation: 2.1
+    };
+  }
 
-  const data = weatherData || mockData;
+  const data = processedData;
   
   const getBarColor = (value) => {
-    if (value < 2) return 'rgba(59, 130, 246, 0.7)'; // Light rain - blue
-    if (value < 5) return 'rgba(99, 102, 241, 0.7)'; // Moderate rain - indigo
-    return 'rgba(67, 56, 202, 0.7)'; // Heavy rain - darker indigo
+    if (value < 2) return 'rgba(59, 130, 246, 0.7)';
+    if (value < 5) return 'rgba(99, 102, 241, 0.7)';
+    return 'rgba(67, 56, 202, 0.7)';
   };
 
   const chartData = {
@@ -143,14 +163,12 @@ const PrecipitationChart = ({ weatherData }) => {
     }
   };
 
-  // Calculate total precipitation
   const totalPrecipitation = (data.precipitation || []).reduce((a, b) => a + b, 0);
 
   return (
     <div className="h-64 w-full">
       <Bar data={chartData} options={options} />
       
-      {/* Precipitation Stats */}
       <div className="flex justify-between mt-4 text-sm">
         <div>
           <span className="text-neutral-500">Total:</span> 

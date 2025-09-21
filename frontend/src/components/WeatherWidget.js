@@ -1,14 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { motion } from 'framer-motion';
 import { apiService } from '../services/api';
 
 function WeatherWidget() {
+  const [userLocation, setUserLocation] = useState(null); // No default fallback - will be detected
+  const [locationLoading, setLocationLoading] = useState(true);
+
+  // Get user's current location on component mount
+  useEffect(() => {
+    const getUserLocation = async () => {
+      try {
+        const location = await apiService.getCurrentLocation();
+        setUserLocation(location.city);
+      } catch (error) {
+        console.warn('Could not get user location:', error.message);
+        // Set a generic fallback location or keep null to show "Location Unknown"
+        setUserLocation('Current Location');
+      } finally {
+        setLocationLoading(false);
+      }
+    };
+
+    getUserLocation();
+  }, []);
+
   const { data: weatherData, isLoading } = useQuery(
-    ['weather', 'current'],
-    () => apiService.getWeatherData('Bangalore'),
+    ['weather', 'current', userLocation],
+    () => apiService.getWeatherData(userLocation),
     {
       refetchInterval: 300000, // Refresh every 5 minutes
+      enabled: !locationLoading, // Only fetch weather after location is determined
     }
   );
 
@@ -18,7 +40,7 @@ function WeatherWidget() {
   };
 
   const mockWeather = {
-    location: 'Bangalore',
+    location: userLocation || 'Unknown Location',
     temperature: 26,
     description: 'Partly Cloudy',
     humidity: 68,
@@ -27,7 +49,7 @@ function WeatherWidget() {
     feels_like: 29
   };
 
-  if (isLoading) {
+  if (isLoading || locationLoading) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
         <div className="animate-pulse space-y-4">
@@ -49,18 +71,21 @@ function WeatherWidget() {
       
       <div className="space-y-4">
         <div>
-          <p className="text-blue-100 text-sm">{data.location}</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-blue-100 text-sm">{data.location}</p>
+            {locationLoading && <span className="text-blue-200 text-xs">Detecting location...</span>}
+          </div>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-3xl font-bold">{data.temperature}°C</p>
               <p className="text-blue-100 text-sm">Feels like {data.feels_like}°C</p>
             </div>
             <div className="text-right">
-              <div className="text-4xl mb-1">
-                {data.description?.toLowerCase().includes('cloud') ? '☁️' :
-                 data.description?.toLowerCase().includes('rain') ? '🌧️' :
-                 data.description?.toLowerCase().includes('sun') ? '☀️' :
-                 '🌤️'}
+              <div className="text-2xl mb-1 text-white font-bold">
+                {data.description?.toLowerCase().includes('cloud') ? 'CLOUDY' :
+                 data.description?.toLowerCase().includes('rain') ? 'RAINY' :
+                 data.description?.toLowerCase().includes('sun') ? 'SUNNY' :
+                 'PARTLY CLOUDY'}
               </div>
             </div>
           </div>

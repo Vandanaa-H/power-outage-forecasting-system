@@ -65,28 +65,28 @@ async def startup_event():
     """Initialize models and weather API on startup."""
     global loaded_model, weather_api
     
-    logger.info("🚀 Starting Karnataka Power Outage Forecasting API...")
+    logger.info("Starting Karnataka Power Outage Forecasting API...")
     
     # Initialize weather API with environment variables
     openweather_key = os.getenv('OPENWEATHER_API_KEY', '15a0ca8a767b6b47131e8433098c2430')
     
     weather_api = KarnatakaWeatherAPI(openweather_api_key=openweather_key)
-    logger.info("✅ Weather API initialized")
+    logger.info("Weather API initialized")
     
     # Load trained model
     model_path = "models/karnataka_outage_model.joblib"
     if os.path.exists(model_path):
         try:
             loaded_model = joblib.load(model_path)
-            logger.info("✅ Loaded trained Karnataka outage prediction model")
+            logger.info("Loaded trained Karnataka outage prediction model")
         except Exception as e:
-            logger.error(f"❌ Failed to load model: {e}")
+            logger.error(f"Failed to load model: {e}")
             loaded_model = None
     else:
-        logger.warning("⚠️  Model file not found - API will use fallback predictions")
+        logger.warning("WARNING: Model file not found - API will use fallback predictions")
         loaded_model = None
     
-    logger.info("🎯 Karnataka Power Outage Forecasting API is ready!")
+    logger.info("Karnataka Power Outage Forecasting API is ready!")
 
 @app.get("/")
 async def root():
@@ -398,9 +398,9 @@ def get_recommendation(outage_probability: float) -> str:
 
 if __name__ == "__main__":
     import uvicorn
-    print("🌟 Starting Karnataka Power Outage Forecasting API...")
-    print("📍 Covering 12 major Karnataka cities with real-time weather data")
-    print("🔮 24-hour outage predictions using trained ML models")
-    print("🌐 API documentation available at: http://localhost:8000/docs")
+    print("Starting Karnataka Power Outage Forecasting API...")
+    print("Covering 12 major Karnataka cities with real-time weather data")
+    print("24-hour outage predictions using trained ML models")
+    print("API documentation available at: http://localhost:8000/docs")
     
     uvicorn.run(app, host="0.0.0.0", port=8000)

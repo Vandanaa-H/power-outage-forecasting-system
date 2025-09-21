@@ -6,7 +6,17 @@ import uuid
 
 from src.api.models import AdvisoryResponse, Advisory, RiskLevel
 from src.utils.advisory_generator import AdvisoryGenerator
-from src.utils.cache import get_cache, set_cache
+# Simple in-memory cache to avoid Redis dependency issues
+_simple_cache = {}
+
+async def get_cache(key: str):
+    """Simple cache getter."""
+    return _simple_cache.get(key)
+
+async def set_cache(key: str, value, ttl=None):
+    """Simple cache setter."""
+    _simple_cache[key] = value
+    return True
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

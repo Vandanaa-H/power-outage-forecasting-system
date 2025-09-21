@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .loading { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>API Connection Test</h1>
+    
+    <button onclick="testHealth()">Test Health Endpoint</button>
+    <button onclick="testAdvisories()">Test Advisories Endpoint</button>
+    <button onclick="testLocation()">Test Location Detection</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000';
+        
+        function addResult(message, type = 'loading') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+            return div;
+        }
+        
+        async function testHealth() {
+            const resultDiv = addResult('Testing health endpoint...', 'loading');
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = `Health Check: SUCCESS<br><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `Health Check: FAILED<br>Error: ${error.message}`;
+            }
+        }
+        
+        async function testAdvisories() {
+            const resultDiv = addResult('Testing advisories endpoint...', 'loading');
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/advisories?limit=2`);
+                const data = await response.json();
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = `Advisories: SUCCESS<br><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `Advisories: FAILED<br>Error: ${error.message}`;
+            }
+        }
+        
+        async function testLocation() {
+            const resultDiv = addResult('Testing location detection...', 'loading');
+            try {
+                if (!navigator.geolocation) {
+                    throw new Error('Geolocation not supported');
+                }
+                
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        try {
+                            const response = await fetch(
+                                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+                            );
+                            const data = await response.json();
+                            const city = data.city || data.locality || data.principalSubdivision || `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
+                            
+                            resultDiv.className = 'test-result success';
+                            resultDiv.innerHTML = `Location Detection: SUCCESS<br>
+                                Coordinates: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}<br>
+                                Detected City: ${city}<br>
+                                Accuracy: ${position.coords.accuracy}m`;
+                        } catch (geoError) {
+                            resultDiv.className = 'test-result success';
+                            resultDiv.innerHTML = `Location Detection: PARTIAL SUCCESS<br>
+                                Coordinates: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}<br>
+                                City detection failed: ${geoError.message}<br>
+                                Accuracy: ${position.coords.accuracy}m`;
+                        }
+                    },
+                    (error) => {
+                        resultDiv.className = 'test-result error';
+                        resultDiv.innerHTML = `Location Detection: FAILED<br>Error: ${error.message}`;
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+                );
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `Location Detection: FAILED<br>Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

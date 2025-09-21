@@ -8,7 +8,8 @@ from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
 
 from config.settings import settings
-from src.api.routes import predictions, heatmap, advisories, simulation
+from src.api.routes import predictions, heatmap, advisories, simulation, metrics
+from src.api.routes import weather as weather_routes
 from src.api.middleware import rate_limit_middleware, logging_middleware
 from src.utils.database import init_database
 from src.utils.logger import setup_logging
@@ -76,6 +77,8 @@ app.include_router(predictions.router, prefix="/api/v1", tags=["Predictions"])
 app.include_router(heatmap.router, prefix="/api/v1", tags=["Heatmap"])
 app.include_router(advisories.router, prefix="/api/v1", tags=["Advisories"])
 app.include_router(simulation.router, prefix="/api/v1", tags=["Simulation"])
+app.include_router(weather_routes.router, prefix="/api/v1", tags=["Weather"])
+app.include_router(metrics.router, prefix="/api/v1", tags=["Metrics"])
 
 
 @app.get("/", tags=["Root"])

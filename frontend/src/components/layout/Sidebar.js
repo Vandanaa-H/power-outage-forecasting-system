@@ -63,12 +63,12 @@ const Sidebar = () => {
                   className="flex items-center"
                 >
                   <div className="flex-shrink-0">
-                    <div className="h-8 w-8 bg-gradient-to-r from-primary-600 to-primary-800 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">KP</span>
+                    <div className="h-9 w-9 bg-gradient-to-r from-primary-600 to-primary-800 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-base">KP</span>
                     </div>
                   </div>
-                  <div className="ml-3">
-                    <h1 className="text-lg font-semibold text-neutral-900">
+                  <div className="ml-3 leading-tight">
+                    <h1 className="text-xl font-semibold text-neutral-900">
                       Karnataka Power
                     </h1>
                     <p className="text-xs text-neutral-500">Outage Forecast</p>
@@ -82,9 +82,9 @@ const Sidebar = () => {
               className="p-1.5 rounded-md text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               {sidebarOpen ? (
-                <XMarkIcon className="h-5 w-5" />
+                <XMarkIcon className="h-6 w-6" />
               ) : (
-                <Bars3Icon className="h-5 w-5" />
+                <Bars3Icon className="h-6 w-6" />
               )}
             </button>
           </div>
@@ -96,7 +96,7 @@ const Sidebar = () => {
                 key={item.name}
                 to={item.href}
                 className={({ isActive }) =>
-                  `group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                  `group flex items-center gap-3 px-3 py-2.5 text-[15px] font-medium rounded-lg transition-colors duration-200 ${
                     isActive
                       ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-600'
                       : 'text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900'
@@ -104,7 +104,7 @@ const Sidebar = () => {
                 }
               >
                 <item.icon
-                  className={`flex-shrink-0 h-5 w-5 ${
+                  className={`flex-shrink-0 h-6 w-6 ${
                     sidebarOpen ? 'mr-3' : 'mx-auto'
                   }`}
                 />

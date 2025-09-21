@@ -12,64 +12,62 @@ import { WiHumidity, WiBarometer, WiStrongWind, WiCloudy } from 'react-icons/wi'
 
 function WeatherData() {
   const { weatherData: storeWeatherData, filters } = useStore();
-  const [selectedLocation, setSelectedLocation] = useState('Bangalore');
-  const [timeRange, setTimeRange] = useState('24h');
-  const [mockWeatherData, setMockWeatherData] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [detectedLocation, setDetectedLocation] = useState(null);
 
-  // Generate mock weather data for demonstration
-  const generateMockWeatherData = () => {
-    const timeLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
-    
-    // Generate temperature data (°C)
-    const tempBase = 24;
-    const temperatures = timeLabels.map((_, i) => {
-      if (i < 2) return tempBase - Math.random() * 3; // Early morning (cooler)
-      if (i >= 2 && i < 4) return tempBase + Math.random() * 5; // Morning to noon (warming)
-      if (i >= 4 && i < 6) return tempBase + 5 + Math.random() * 3; // Afternoon (warmest)
-      return tempBase + 2 - Math.random() * 3; // Evening (cooling down)
-    }).map(t => Math.round(t * 10) / 10);
-    
-    // Generate precipitation data (mm)
-    const isRainy = Math.random() > 0.5;
-    const precipitation = timeLabels.map(() => {
-      if (!isRainy) return 0;
-      const rainChance = Math.random();
-      if (rainChance > 0.7) return Math.round(Math.random() * 100) / 10; // Some rain
-      return 0; // No rain
-    });
-    
-    // Generate wind data (km/h)
-    const windBase = 10 + Math.random() * 10;
-    const windSpeed = timeLabels.map(() => Math.round(windBase + Math.random() * 20));
-    const windGust = windSpeed.map(speed => Math.round(speed * (1.2 + Math.random() * 0.5)));
-    
-    // Generate humidity data (%)
-    const humidityBase = 60 + Math.random() * 20;
-    const humidity = timeLabels.map((_, i) => {
-      if (i < 3) return Math.min(95, humidityBase + 10 + Math.random() * 10); // Higher in early morning
-      if (i >= 3 && i < 5) return Math.max(40, humidityBase - 10 - Math.random() * 10); // Lower in afternoon
-      return Math.min(90, humidityBase + Math.random() * 5); // Rising in evening
-    }).map(h => Math.round(h));
-    
-    return {
-      labels: timeLabels,
-      temperatures,
-      minTemp: Math.min(...temperatures),
-      maxTemp: Math.max(...temperatures),
-      precipitation,
-      maxPrecipitation: Math.max(...precipitation),
-      windSpeed,
-      windGust,
-      maxWindSpeed: Math.max(...windSpeed),
-      maxWindGust: Math.max(...windGust),
-      humidity
-    };
-  };
+  // Available cities for Karnataka
+  const cities = [
+    'Bangalore', 'Mysore', 'Hubli', 'Mangalore', 'Belgaum', 'Gulbarga',
+    'Davangere', 'Bellary', 'Bijapur', 'Shimoga', 'Tumkur', 'Raichur'
+  ];
 
-  // Generate mock data when location changes
+  // Auto-detect user location on component mount
   useEffect(() => {
-    setMockWeatherData(generateMockWeatherData());
-  }, [selectedLocation, timeRange]);
+    const detectLocation = async () => {
+      try {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              try {
+                const response = await fetch(
+                  `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
+                );
+                const data = await response.json();
+                const city = data.city || data.locality || `${position.coords.latitude.toFixed(2)}, ${position.coords.longitude.toFixed(2)}`;
+                setDetectedLocation(city);
+                setSelectedLocation(city);
+              } catch (error) {
+                console.warn('Reverse geocoding failed:', error);
+                setSelectedLocation('Current Location');
+              }
+            },
+            (error) => {
+              console.warn('Geolocation failed:', error);
+              // Fallback to first available location from the list
+              setSelectedLocation(cities[0]);
+            }
+          );
+        } else {
+          setSelectedLocation(cities[0]);
+        }
+      } catch (error) {
+        setSelectedLocation(cities[0]);
+      }
+    };
+
+    detectLocation();
+  }, [cities]);
+  const [timeRange, setTimeRange] = useState('24h');
+
+  // Get weather forecast data for charts
+  const { data: forecastData } = useQuery(
+    ['weather', 'forecast', selectedLocation, timeRange],
+    () => apiService.getWeatherForecast(selectedLocation, timeRange),
+    {
+      refetchInterval: 900000, // Refresh every 15 minutes
+      enabled: !!selectedLocation
+    }
+  );
 
   const { data: currentWeather, isLoading: weatherLoading } = useQuery(
     ['weather', selectedLocation],
@@ -100,11 +98,6 @@ function WeatherData() {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
   };
-
-  const cities = [
-    'Bangalore', 'Mysore', 'Hubli', 'Mangalore', 'Belgaum', 'Gulbarga',
-    'Davangere', 'Bellary', 'Bijapur', 'Shimoga', 'Tumkur', 'Raichur'
-  ];
 
   const weatherMetrics = currentWeather ? [
     { label: 'Temperature', value: `${currentWeather.temperature}°C`, trend: '+2°C' },
@@ -139,7 +132,7 @@ function WeatherData() {
         </div>
         <div className="flex items-center space-x-4">
           <select
-            value={selectedLocation}
+            value={selectedLocation || cities[0]}
             onChange={(e) => setSelectedLocation(e.target.value)}
             className="border border-neutral-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
@@ -168,7 +161,7 @@ function WeatherData() {
             <p className="text-blue-100">Current Weather Conditions</p>
           </div>
           <div className="text-right">
-            <div className="text-4xl font-bold">{currentWeather?.temperature || '--'}°C</div>
+            <div className="text-2xl font-bold">{currentWeather?.temperature || '--'}°C</div>
             <p className="text-blue-100">{currentWeather?.description || 'Loading...'}</p>
           </div>
         </div>
@@ -209,8 +202,8 @@ function WeatherData() {
             <FiThermometer className="w-5 h-5 text-red-500 mr-2" />
             Temperature Trend
           </h3>
-          {mockWeatherData ? (
-            <TemperatureChart weatherData={mockWeatherData} />
+          {forecastData ? (
+            <TemperatureChart weatherData={forecastData} />
           ) : (
             <div className="h-64 flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-50 rounded-lg">
               <div className="text-center">
@@ -231,8 +224,8 @@ function WeatherData() {
             <FiDroplet className="w-5 h-5 text-blue-500 mr-2" />
             Precipitation
           </h3>
-          {mockWeatherData ? (
-            <PrecipitationChart weatherData={mockWeatherData} />
+          {forecastData ? (
+            <PrecipitationChart weatherData={forecastData} />
           ) : (
             <div className="h-64 flex items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg">
               <div className="text-center">
@@ -256,8 +249,8 @@ function WeatherData() {
             <FiWind className="w-5 h-5 text-green-500 mr-2" />
             Wind Speed & Gust
           </h3>
-          {mockWeatherData ? (
-            <WindChart weatherData={mockWeatherData} />
+          {forecastData ? (
+            <WindChart weatherData={forecastData} />
           ) : (
             <div className="h-64 flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg">
               <div className="text-center">
@@ -278,8 +271,8 @@ function WeatherData() {
             <WiHumidity className="w-6 h-6 text-blue-500 mr-1" />
             Humidity
           </h3>
-          {mockWeatherData ? (
-            <HumidityChart weatherData={mockWeatherData} />
+          {forecastData ? (
+            <HumidityChart weatherData={forecastData} />
           ) : (
             <div className="h-64 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg">
               <div className="text-center">
@@ -300,7 +293,7 @@ function WeatherData() {
       <motion.div variants={itemVariants} className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
         <h3 className="text-lg font-semibold text-neutral-900 mb-4">Weather Alerts & Warnings</h3>
         <div className="space-y-3">
-          {mockWeatherData?.maxWindSpeed > 40 && (
+          {currentWeather?.wind_speed > 25 && (
             <div className="flex items-center p-4 bg-amber-50 border border-amber-200 rounded-lg">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center">
@@ -309,12 +302,12 @@ function WeatherData() {
               </div>
               <div className="ml-4">
                 <p className="text-base font-semibold text-amber-800">High Wind Warning</p>
-                <p className="text-sm text-amber-700">Wind speeds of {mockWeatherData.maxWindSpeed} km/h expected in {selectedLocation}</p>
+                <p className="text-sm text-amber-700">Wind speeds of {currentWeather.wind_speed?.toFixed(1)} km/h detected in {selectedLocation}</p>
               </div>
             </div>
           )}
           
-          {mockWeatherData?.maxPrecipitation > 5 && (
+          {currentWeather?.rainfall > 2 && (
             <div className="flex items-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
@@ -323,12 +316,12 @@ function WeatherData() {
               </div>
               <div className="ml-4">
                 <p className="text-base font-semibold text-blue-800">Heavy Rain Advisory</p>
-                <p className="text-sm text-blue-700">Precipitation levels of {mockWeatherData.maxPrecipitation.toFixed(1)} mm expected</p>
+                <p className="text-sm text-blue-700">Precipitation of {currentWeather.rainfall?.toFixed(1)} mm detected</p>
               </div>
             </div>
           )}
           
-          {mockWeatherData?.maxTemp > 32 && (
+          {currentWeather?.temperature > 32 && (
             <div className="flex items-center p-4 bg-red-50 border border-red-200 rounded-lg">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
@@ -337,12 +330,12 @@ function WeatherData() {
               </div>
               <div className="ml-4">
                 <p className="text-base font-semibold text-red-800">High Temperature Alert</p>
-                <p className="text-sm text-red-700">Temperatures up to {mockWeatherData.maxTemp}°C expected in {selectedLocation}</p>
+                <p className="text-sm text-red-700">Temperature of {currentWeather.temperature?.toFixed(1)}°C detected in {selectedLocation}</p>
               </div>
             </div>
           )}
           
-          {mockWeatherData?.humidity.some(h => h > 90) && (
+          {currentWeather?.humidity > 85 && (
             <div className="flex items-center p-4 bg-purple-50 border border-purple-200 rounded-lg">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
@@ -356,10 +349,10 @@ function WeatherData() {
             </div>
           )}
           
-          {!mockWeatherData?.maxWindSpeed > 40 && 
-           !mockWeatherData?.maxPrecipitation > 5 && 
-           !mockWeatherData?.maxTemp > 32 && 
-           !mockWeatherData?.humidity.some(h => h > 90) && (
+          {(!currentWeather?.wind_speed || currentWeather.wind_speed <= 25) && 
+           (!currentWeather?.rainfall || currentWeather.rainfall <= 2) && 
+           (!currentWeather?.temperature || currentWeather.temperature <= 32) && 
+           (!currentWeather?.humidity || currentWeather.humidity <= 85) && (
             <div className="flex items-center p-4 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
@@ -369,14 +362,14 @@ function WeatherData() {
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-base font-semibold text-green-800">No Weather Alerts</p>
-                <p className="text-sm text-green-700">Weather conditions in {selectedLocation} are normal</p>
+                <p className="text-base font-semibold text-green-800">Normal Weather Conditions</p>
+                <p className="text-sm text-green-700">Weather conditions in {selectedLocation} are within normal parameters</p>
               </div>
             </div>
           )}
           
-          {/* Always show standard Thunderstorm Warning as fallback */}
-          {!mockWeatherData && (
+          {/* Show general weather advisory if no current weather data */}
+          {!currentWeather && (
             <div className="flex items-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
@@ -401,99 +394,99 @@ function WeatherData() {
           Based on current weather conditions, here's our analysis of potential impacts on power infrastructure:
         </p>
         
-        {mockWeatherData && (
+        {forecastData && (
           <div className="space-y-4">
             {/* Risk Indicators */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white border border-neutral-200 rounded-lg p-4 flex flex-col items-center">
                 <div className="text-sm font-medium text-neutral-600 mb-1">Wind Risk</div>
                 <div className={`text-xl font-bold ${
-                  mockWeatherData.maxWindSpeed > 60 ? 'text-red-600' :
-                  mockWeatherData.maxWindSpeed > 40 ? 'text-amber-600' :
-                  mockWeatherData.maxWindSpeed > 25 ? 'text-yellow-600' :
+                  forecastData.maxWindSpeed > 60 ? 'text-red-600' :
+                  forecastData.maxWindSpeed > 40 ? 'text-amber-600' :
+                  forecastData.maxWindSpeed > 25 ? 'text-yellow-600' :
                   'text-green-600'
                 }`}>
-                  {mockWeatherData.maxWindSpeed > 60 ? 'Severe' :
-                   mockWeatherData.maxWindSpeed > 40 ? 'High' :
-                   mockWeatherData.maxWindSpeed > 25 ? 'Moderate' :
+                  {forecastData.maxWindSpeed > 60 ? 'Severe' :
+                   forecastData.maxWindSpeed > 40 ? 'High' :
+                   forecastData.maxWindSpeed > 25 ? 'Moderate' :
                    'Low'}
                 </div>
                 <div className="w-full bg-neutral-100 rounded-full h-2.5 mt-2">
                   <div className={`h-2.5 rounded-full ${
-                    mockWeatherData.maxWindSpeed > 60 ? 'bg-red-600' :
-                    mockWeatherData.maxWindSpeed > 40 ? 'bg-amber-600' :
-                    mockWeatherData.maxWindSpeed > 25 ? 'bg-yellow-500' :
+                    forecastData.maxWindSpeed > 60 ? 'bg-red-600' :
+                    forecastData.maxWindSpeed > 40 ? 'bg-amber-600' :
+                    forecastData.maxWindSpeed > 25 ? 'bg-yellow-500' :
                     'bg-green-600'
-                  }`} style={{ width: `${Math.min(100, (mockWeatherData.maxWindSpeed / 80) * 100)}%` }}></div>
+                  }`} style={{ width: `${Math.min(100, (forecastData.maxWindSpeed / 80) * 100)}%` }}></div>
                 </div>
               </div>
               
               <div className="bg-white border border-neutral-200 rounded-lg p-4 flex flex-col items-center">
                 <div className="text-sm font-medium text-neutral-600 mb-1">Precipitation Risk</div>
                 <div className={`text-xl font-bold ${
-                  mockWeatherData.maxPrecipitation > 10 ? 'text-red-600' :
-                  mockWeatherData.maxPrecipitation > 5 ? 'text-amber-600' :
-                  mockWeatherData.maxPrecipitation > 2 ? 'text-yellow-600' :
+                  (currentWeather?.rainfall || 2.5) > 10 ? 'text-red-600' :
+                  (currentWeather?.rainfall || 2.5) > 5 ? 'text-amber-600' :
+                  (currentWeather?.rainfall || 2.5) > 2 ? 'text-yellow-600' :
                   'text-green-600'
                 }`}>
-                  {mockWeatherData.maxPrecipitation > 10 ? 'Severe' :
-                   mockWeatherData.maxPrecipitation > 5 ? 'High' :
-                   mockWeatherData.maxPrecipitation > 2 ? 'Moderate' :
+                  {(currentWeather?.rainfall || 2.5) > 10 ? 'Severe' :
+                   (currentWeather?.rainfall || 2.5) > 5 ? 'High' :
+                   (currentWeather?.rainfall || 2.5) > 2 ? 'Moderate' :
                    'Low'}
                 </div>
                 <div className="w-full bg-neutral-100 rounded-full h-2.5 mt-2">
                   <div className={`h-2.5 rounded-full ${
-                    mockWeatherData.maxPrecipitation > 10 ? 'bg-red-600' :
-                    mockWeatherData.maxPrecipitation > 5 ? 'bg-amber-600' :
-                    mockWeatherData.maxPrecipitation > 2 ? 'bg-yellow-500' :
+                    (currentWeather?.rainfall || 2.5) > 10 ? 'bg-red-600' :
+                    (currentWeather?.rainfall || 2.5) > 5 ? 'bg-amber-600' :
+                    (currentWeather?.rainfall || 2.5) > 2 ? 'bg-yellow-500' :
                     'bg-green-600'
-                  }`} style={{ width: `${Math.min(100, (mockWeatherData.maxPrecipitation / 15) * 100)}%` }}></div>
+                  }`} style={{ width: `${Math.min(100, ((currentWeather?.rainfall || 2.5) / 15) * 100)}%` }}></div>
                 </div>
               </div>
               
               <div className="bg-white border border-neutral-200 rounded-lg p-4 flex flex-col items-center">
                 <div className="text-sm font-medium text-neutral-600 mb-1">Temperature Risk</div>
                 <div className={`text-xl font-bold ${
-                  mockWeatherData.maxTemp > 38 ? 'text-red-600' :
-                  mockWeatherData.maxTemp > 32 ? 'text-amber-600' :
-                  mockWeatherData.maxTemp > 28 ? 'text-yellow-600' :
+                  (currentWeather?.temperature || 30) > 38 ? 'text-red-600' :
+                  (currentWeather?.temperature || 30) > 32 ? 'text-amber-600' :
+                  (currentWeather?.temperature || 30) > 28 ? 'text-yellow-600' :
                   'text-green-600'
                 }`}>
-                  {mockWeatherData.maxTemp > 38 ? 'Severe' :
-                   mockWeatherData.maxTemp > 32 ? 'High' :
-                   mockWeatherData.maxTemp > 28 ? 'Moderate' :
+                  {(currentWeather?.temperature || 30) > 38 ? 'Severe' :
+                   (currentWeather?.temperature || 30) > 32 ? 'High' :
+                   (currentWeather?.temperature || 30) > 28 ? 'Moderate' :
                    'Low'}
                 </div>
                 <div className="w-full bg-neutral-100 rounded-full h-2.5 mt-2">
                   <div className={`h-2.5 rounded-full ${
-                    mockWeatherData.maxTemp > 38 ? 'bg-red-600' :
-                    mockWeatherData.maxTemp > 32 ? 'bg-amber-600' :
-                    mockWeatherData.maxTemp > 28 ? 'bg-yellow-500' :
+                    (currentWeather?.temperature || 30) > 38 ? 'bg-red-600' :
+                    (currentWeather?.temperature || 30) > 32 ? 'bg-amber-600' :
+                    (currentWeather?.temperature || 30) > 28 ? 'bg-yellow-500' :
                     'bg-green-600'
-                  }`} style={{ width: `${Math.min(100, ((mockWeatherData.maxTemp - 20) / 25) * 100)}%` }}></div>
+                  }`} style={{ width: `${Math.min(100, (((currentWeather?.temperature || 30) - 20) / 25) * 100)}%` }}></div>
                 </div>
               </div>
               
               <div className="bg-white border border-neutral-200 rounded-lg p-4 flex flex-col items-center">
                 <div className="text-sm font-medium text-neutral-600 mb-1">Humidity Risk</div>
                 <div className={`text-xl font-bold ${
-                  Math.max(...mockWeatherData.humidity) > 95 ? 'text-red-600' :
-                  Math.max(...mockWeatherData.humidity) > 90 ? 'text-amber-600' :
-                  Math.max(...mockWeatherData.humidity) > 80 ? 'text-yellow-600' :
+                  (currentWeather?.humidity || 65) > 95 ? 'text-red-600' :
+                  (currentWeather?.humidity || 65) > 90 ? 'text-amber-600' :
+                  (currentWeather?.humidity || 65) > 80 ? 'text-yellow-600' :
                   'text-green-600'
                 }`}>
-                  {Math.max(...mockWeatherData.humidity) > 95 ? 'Severe' :
-                   Math.max(...mockWeatherData.humidity) > 90 ? 'High' :
-                   Math.max(...mockWeatherData.humidity) > 80 ? 'Moderate' :
+                  {(currentWeather?.humidity || 65) > 95 ? 'Severe' :
+                   (currentWeather?.humidity || 65) > 90 ? 'High' :
+                   (currentWeather?.humidity || 65) > 80 ? 'Moderate' :
                    'Low'}
                 </div>
                 <div className="w-full bg-neutral-100 rounded-full h-2.5 mt-2">
                   <div className={`h-2.5 rounded-full ${
-                    Math.max(...mockWeatherData.humidity) > 95 ? 'bg-red-600' :
-                    Math.max(...mockWeatherData.humidity) > 90 ? 'bg-amber-600' :
-                    Math.max(...mockWeatherData.humidity) > 80 ? 'bg-yellow-500' :
+                    (currentWeather?.humidity || 65) > 95 ? 'bg-red-600' :
+                    (currentWeather?.humidity || 65) > 90 ? 'bg-amber-600' :
+                    (currentWeather?.humidity || 65) > 80 ? 'bg-yellow-500' :
                     'bg-green-600'
-                  }`} style={{ width: `${Math.min(100, (Math.max(...mockWeatherData.humidity) / 100) * 100)}%` }}></div>
+                  }`} style={{ width: `${Math.min(100, ((currentWeather?.humidity || 65) / 100) * 100)}%` }}></div>
                 </div>
               </div>
             </div>
@@ -502,34 +495,34 @@ function WeatherData() {
             <div className="bg-neutral-50 p-5 rounded-lg border border-neutral-200 mt-4">
               <h4 className="font-semibold text-lg text-neutral-900 mb-2">Impact Analysis</h4>
               <div className="space-y-3">
-                {mockWeatherData.maxWindSpeed > 40 && (
+                {currentWeather.maxWindSpeed > 40 && (
                   <p className="text-neutral-700">
-                    <span className="font-medium text-amber-700">Wind impact:</span> Wind speeds of {mockWeatherData.maxWindSpeed} km/h may cause swinging overhead lines, possibly leading to momentary outages or damage to infrastructure in exposed areas.
+                    <span className="font-medium text-amber-700">Wind impact:</span> Wind speeds of {currentWeather.maxWindSpeed} km/h may cause swinging overhead lines, possibly leading to momentary outages or damage to infrastructure in exposed areas.
                   </p>
                 )}
                 
-                {mockWeatherData.maxPrecipitation > 5 && (
+                {(currentWeather?.rainfall || 2.5) > 5 && (
                   <p className="text-neutral-700">
-                    <span className="font-medium text-blue-700">Precipitation impact:</span> Heavy rainfall ({mockWeatherData.maxPrecipitation.toFixed(1)} mm) increases the risk of water intrusion into electrical equipment and may cause localized flooding around ground-mounted transformers.
+                    <span className="font-medium text-blue-700">Precipitation impact:</span> Heavy rainfall ({(currentWeather?.rainfall || 2.5).toFixed(1)} mm) increases the risk of water intrusion into electrical equipment and may cause localized flooding around ground-mounted transformers.
                   </p>
                 )}
                 
-                {mockWeatherData.maxTemp > 32 && (
+                {(currentWeather?.temperature || 30) > 32 && (
                   <p className="text-neutral-700">
-                    <span className="font-medium text-red-700">Temperature impact:</span> High temperatures ({mockWeatherData.maxTemp}°C) may lead to thermal overload of transformers and increased demand from cooling systems, potentially triggering load-shedding.
+                    <span className="font-medium text-red-700">Temperature impact:</span> High temperatures ({(currentWeather?.temperature || 30)}°C) may lead to thermal overload of transformers and increased demand from cooling systems, potentially triggering load-shedding.
                   </p>
                 )}
                 
-                {Math.max(...mockWeatherData.humidity) > 90 && (
+                {(currentWeather?.humidity || 65) > 90 && (
                   <p className="text-neutral-700">
-                    <span className="font-medium text-purple-700">Humidity impact:</span> Very high humidity ({Math.max(...mockWeatherData.humidity)}%) can cause condensation on insulators and equipment, increasing the risk of flashovers and short circuits.
+                    <span className="font-medium text-purple-700">Humidity impact:</span> Very high humidity ({(currentWeather?.humidity || 65)}%) can cause condensation on insulators and equipment, increasing the risk of flashovers and short circuits.
                   </p>
                 )}
                 
-                {!mockWeatherData.maxWindSpeed > 40 && 
-                 !mockWeatherData.maxPrecipitation > 5 && 
-                 !mockWeatherData.maxTemp > 32 && 
-                 !Math.max(...mockWeatherData.humidity) > 90 && (
+                {!currentWeather.maxWindSpeed > 40 && 
+                 !(currentWeather?.rainfall || 2.5) > 5 && 
+                 !(currentWeather?.temperature || 30) > 32 && 
+                 !(currentWeather?.humidity || 65) > 90 && (
                   <p className="text-neutral-700">
                     <span className="font-medium text-green-700">Favorable conditions:</span> Current weather parameters in {selectedLocation} are within normal operational limits for power infrastructure. No significant weather-related risks identified.
                   </p>

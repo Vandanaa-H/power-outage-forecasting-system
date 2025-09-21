@@ -361,7 +361,7 @@ class KarnatakaWeatherAPI:
 # Demo usage
 async def demo_weather_api():
     """Demo the weather API integration."""
-    print("🌤️  KARNATAKA WEATHER API DEMO")
+    print("KARNATAKA WEATHER API DEMO")
     print("="*50)
     
     # Initialize (with demo keys - replace with real ones)
@@ -378,7 +378,7 @@ async def demo_weather_api():
     print(f"\n{weather_api.get_api_setup_instructions()}")
     
     # Note: Actual API calls would fail with demo keys
-    print("⚠️  Replace demo keys with real API keys to fetch live data!")
+    print("WARNING: Replace demo keys with real API keys to fetch live data!")
 
 
 if __name__ == "__main__":

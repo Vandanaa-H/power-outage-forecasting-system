@@ -1,5 +1,6 @@
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field, validator
+from pydantic import model_validator
 from datetime import datetime
 from enum import Enum
 
@@ -51,6 +52,23 @@ class PredictionResponse(BaseModel):
     prediction_timestamp: datetime = Field(default_factory=datetime.utcnow)
     explanation: Optional[Dict[str, Any]] = Field(None, description="SHAP explanation data")
     contributing_factors: List[str] = Field(default_factory=list, description="Main risk factors")
+
+
+class LivePredictionRequest(BaseModel):
+    """Live prediction request using city or coordinates, with optional grid overrides."""
+    city: Optional[str] = Field(None, description="Karnataka city key (e.g., 'bangalore', 'mysore')")
+    latitude: Optional[float] = Field(None, ge=-90, le=90, description="Latitude coordinate")
+    longitude: Optional[float] = Field(None, ge=-180, le=180, description="Longitude coordinate")
+    grid_data: Optional[GridInput] = Field(None, description="Optional grid overrides")
+    include_explanation: bool = Field(True, description="Include SHAP explanations")
+
+    @model_validator(mode='after')
+    def check_location(self):
+        has_city = self.city is not None and str(self.city).strip() != ""
+        has_coords = self.latitude is not None and self.longitude is not None
+        if not (has_city or has_coords):
+            raise ValueError("Provide either 'city' or both 'latitude' and 'longitude'")
+        return self
 
 
 class HeatmapPoint(BaseModel):

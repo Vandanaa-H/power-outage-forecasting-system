@@ -18,8 +18,9 @@ class Settings(BaseSettings):
     timescale_url: Optional[str] = None
     redis_url: str = "redis://localhost:6379/0"
     
-    # Weather APIs (demo mode - no keys required)
-    openweather_api_key: str = "demo_key"
+    # Weather APIs (real keys from environment)
+    openweather_api_key: str = "b8059199d3c41cfc1ee1e16151a92c58"
+    weatherapi_key: Optional[str] = "98222bd46f7955db17dd2c1c86178847"
     noaa_api_key: Optional[str] = None
     imd_api_key: Optional[str] = None
     

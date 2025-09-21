@@ -7,7 +7,17 @@ import uuid
 from src.api.models import WhatIfRequest, WhatIfResponse, PredictionRequest, PredictionResponse
 from src.models.ensemble_model import EnsemblePredictor
 from src.utils.scenario_analyzer import ScenarioAnalyzer
-from src.utils.cache import get_cache, set_cache
+# Simple in-memory cache to avoid Redis dependency issues
+_simple_cache = {}
+
+async def get_cache(key: str):
+    """Simple cache getter."""
+    return _simple_cache.get(key)
+
+async def set_cache(key: str, value, ttl=None):
+    """Simple cache setter."""
+    _simple_cache[key] = value
+    return True
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -61,17 +71,26 @@ async def run_what_if_simulation(
         
         baseline_result = await model.predict(baseline_input, include_explanation=False)
         
-        # Create modified scenario
-        modified_scenario = await analyzer.apply_modifications(
-            request.base_scenario, 
-            request.modified_parameters
-        )
+        # Create modified scenario by copying and applying changes
+        modified_scenario_dict = request.base_scenario.dict()
+        
+        # Apply modifications to the dictionary
+        for param_path, new_value in request.modified_parameters.items():
+            try:
+                # Navigate nested dictionary structure
+                keys = param_path.split('.')
+                current = modified_scenario_dict
+                for key in keys[:-1]:
+                    current = current[key]
+                current[keys[-1]] = new_value
+            except (KeyError, TypeError) as e:
+                logger.warning(f"Failed to apply modification {param_path}={new_value}: {e}")
         
         # Get modified prediction
         modified_input = {
-            'weather': modified_scenario.weather_data.dict(),
-            'grid': modified_scenario.grid_data.dict(),
-            'prediction_horizon': modified_scenario.prediction_horizon
+            'weather': modified_scenario_dict['weather_data'],
+            'grid': modified_scenario_dict['grid_data'],
+            'prediction_horizon': modified_scenario_dict['prediction_horizon']
         }
         
         modified_result = await model.predict(modified_input, include_explanation=True)
@@ -250,10 +269,10 @@ async def run_sensitivity_analysis(
     parameter: str,
     min_value: float,
     max_value: float,
-    steps: int = 10,
     background_tasks: BackgroundTasks,
-    model: EnsemblePredictor = Depends(get_ensemble_model),
-    analyzer: ScenarioAnalyzer = Depends(get_scenario_analyzer)
+    steps: int = 10,
+    model = Depends(get_ensemble_model),
+    analyzer = Depends(get_scenario_analyzer)
 ):
     """
     Run sensitivity analysis for a specific parameter.

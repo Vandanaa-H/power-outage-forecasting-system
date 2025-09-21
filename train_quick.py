@@ -15,27 +15,27 @@ from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
 
-print("🚀 QUICK KARNATAKA MODEL TRAINING")
+print("QUICK KARNATAKA MODEL TRAINING")
 print("=" * 50)
 
 # Create models directory
 Path("models").mkdir(exist_ok=True)
 
 # Load Karnataka dataset
-print("📊 Loading Karnataka dataset...")
+print("Loading Karnataka dataset...")
 data_file = "data/karnataka_power_outage_dataset.csv"
 
 if not os.path.exists(data_file):
-    print(f"❌ Dataset not found: {data_file}")
+    print(f"Dataset not found: {data_file}")
     print("Run: python data/karnataka_data_loader.py")
     exit(1)
 
 df = pd.read_csv(data_file)
-print(f"✅ Loaded dataset: {len(df):,} records")
-print(f"📈 Outage rate: {df['outage_occurred'].mean():.2%}")
+print(f"Loaded dataset: {len(df):,} records")
+print(f"Outage rate: {df['outage_occurred'].mean():.2%}")
 
 # Prepare features
-print("\n⚙️  Preparing features...")
+print("\nPreparing features...")
 
 # Encode categorical variables
 le_city = LabelEncoder()
@@ -61,8 +61,8 @@ feature_columns = [
 X = df[feature_columns].fillna(0)
 y = df['outage_occurred']
 
-print(f"✅ Features: {len(feature_columns)} columns")
-print(f"✅ Samples: {len(X):,} records")
+print(f"Features: {len(feature_columns)} columns")
+print(f"Samples: {len(X):,} records")
 
 # Split data
 print("\n🔄 Splitting data...")
@@ -93,7 +93,7 @@ rf_model = RandomForestClassifier(
 rf_model.fit(X_train_scaled, y_train)
 
 # Gradient Boosting
-print("⚡ Training Gradient Boosting...")
+print("Training Gradient Boosting...")
 gb_model = GradientBoostingClassifier(
     n_estimators=100,
     max_depth=6,
@@ -136,7 +136,7 @@ class KarnatakaEnsembleModel:
 ensemble_model = KarnatakaEnsembleModel(rf_model, gb_model, scaler, feature_columns)
 
 # Evaluate models
-print("\n📊 EVALUATING MODELS...")
+print("\nEVALUATING MODELS...")
 
 # Test predictions
 rf_pred = rf_model.predict(X_test_scaled)
@@ -151,16 +151,16 @@ print("🌳 Random Forest Results:")
 print(f"   Accuracy: {accuracy_score(y_test, rf_pred):.3f}")
 print(f"   ROC-AUC: {roc_auc_score(y_test, rf_proba):.3f}")
 
-print("⚡ Gradient Boosting Results:")
+print("Gradient Boosting Results:")
 print(f"   Accuracy: {accuracy_score(y_test, gb_pred):.3f}")
 print(f"   ROC-AUC: {roc_auc_score(y_test, gb_proba):.3f}")
 
-print("🎯 Ensemble Results:")
+print("Ensemble Results:")
 print(f"   Accuracy: {accuracy_score(y_test, ensemble_pred):.3f}")
 print(f"   ROC-AUC: {roc_auc_score(y_test, ensemble_proba):.3f}")
 
 # Feature importance
-print("\n📈 TOP FEATURES:")
+print("\nTOP FEATURES:")
 feature_importance = rf_model.feature_importances_
 for i, importance in enumerate(feature_importance):
     if importance > 0.05:  # Show important features
@@ -171,8 +171,8 @@ print("\n💾 Saving model...")
 model_path = "models/karnataka_outage_model.joblib"
 joblib.dump(ensemble_model, model_path)
 
-print(f"✅ Model saved to: {model_path}")
-print(f"📦 Model size: {os.path.getsize(model_path) / 1024 / 1024:.1f} MB")
+print(f"Model saved to: {model_path}")
+print(f"Model size: {os.path.getsize(model_path) / 1024 / 1024:.1f} MB")
 
 # Test prediction example
 print("\n🔮 TESTING PREDICTION...")
@@ -180,5 +180,5 @@ sample_data = X_test.iloc[0:1].values
 prediction = ensemble_model.predict_proba(sample_data)
 print(f"Sample prediction: {prediction[0][1]:.3f} outage probability")
 
-print("\n🎉 KARNATAKA MODEL TRAINING COMPLETE!")
+print("\nKARNATAKA MODEL TRAINING COMPLETE!")
 print("Ready for real-time predictions with weather API integration!")
