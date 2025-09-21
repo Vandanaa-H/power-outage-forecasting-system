@@ -1,0 +1,26 @@
+services:
+  # Backend API Service
+  - type: web
+    name: power-outage-api
+    env: python
+    buildCommand: pip install -r requirements-minimal.txt
+    startCommand: uvicorn backend_simple:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PORT
+        generateValue: true
+
+  # Frontend Static Site
+  - type: web
+    name: power-outage-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/build
+    envVars:
+      - key: REACT_APP_API_URL
+        fromService:
+          type: web
+          name: power-outage-api
+          property: host
+        value: https://power-outage-api.onrender.com

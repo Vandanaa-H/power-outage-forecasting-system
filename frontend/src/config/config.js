@@ -11,7 +11,7 @@ class Config {
 
   // API Configuration
   get apiUrl() {
-    return process.env.REACT_APP_API_URL || 'http://localhost:8000';
+    return process.env.REACT_APP_API_URL || 'http://localhost:8002';
   }
 
   get apiTimeout() {

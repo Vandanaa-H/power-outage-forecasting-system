@@ -23,7 +23,11 @@ app = FastAPI(
 # Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React default port
+    allow_origins=[
+        "http://localhost:3000",  # Local development
+        "https://*.onrender.com",  # Render frontend
+        "https://power-outage-forecasting-frontend.onrender.com"  # Your specific frontend URL
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
