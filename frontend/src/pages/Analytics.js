@@ -51,12 +51,12 @@ function Analytics() {
   };
 
   const kpiData = [
-    { label: 'Model Accuracy', value: '95.6%', change: '+2.1%', trend: 'up' },
+    { label: 'Model Accuracy', value: '92.3%', change: '+2.1%', trend: 'up' },
     { label: 'Predictions Made', value: '1,247', change: '+156', trend: 'up' },
     { label: 'Average Response Time', value: '1.2s', change: '-0.3s', trend: 'down' },
     { label: 'System Uptime', value: '99.9%', change: '0%', trend: 'stable' },
     { label: 'False Positives', value: '2.1%', change: '-0.5%', trend: 'down' },
-    { label: 'Coverage Areas', value: '30', change: '+2', trend: 'up' }
+    { label: 'Coverage Cities', value: '10', change: '+2', trend: 'up' }
   ];
 
   const recentPerformance = [

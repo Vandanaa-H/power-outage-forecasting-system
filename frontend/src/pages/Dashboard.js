@@ -139,7 +139,7 @@ function Dashboard() {
           <div className="bg-white rounded-lg p-4 shadow border h-full flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold text-blue-600">98.7%</div>
+                <div className="text-2xl font-bold text-blue-600">92.3%</div>
                 <div className="text-sm text-gray-500">Accuracy</div>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -277,7 +277,7 @@ function Dashboard() {
           <div className="space-y-3">
             {[
               { time: '2 minutes ago', message: 'High wind alert triggered for Northern Grid', type: 'warning', icon: FiAlertTriangle },
-              { time: '15 minutes ago', message: 'Predictive model accuracy improved to 98.7%', type: 'success', icon: FiCheckCircle },
+              { time: '15 minutes ago', message: 'Predictive model accuracy improved to 92.3%', type: 'success', icon: FiCheckCircle },
               { time: '1 hour ago', message: 'Scheduled maintenance completed on Bay Area sensors', type: 'info', icon: FiTool },
               { time: '3 hours ago', message: '247 new data points processed from weather stations', type: 'info', icon: FiActivity }
             ].map((activity, index) => (
